@@ -20,6 +20,11 @@
 python3 download_douyin.py https://v.douyin.com/xxx/
 ```
 
+直接粘贴抖音分享文案（自动提取链接）：
+```bash
+python3 download_douyin.py '9.71 复制打开抖音 https://v.douyin.com/xxx/ 直接观看视频！'
+```
+
 自定义文件名：
 ```bash
 python3 download_douyin.py https://v.douyin.com/xxx/ "我的视频.mp4"
@@ -27,11 +32,11 @@ python3 download_douyin.py https://v.douyin.com/xxx/ "我的视频.mp4"
 
 ### 批量下载
 
-准备一个文本文件（如 `urls.txt`），每行一个链接：
+准备一个文本文件（如 `urls.txt`），每行一个链接或分享文案：
 ```
 # 这是注释，会被忽略
 https://v.douyin.com/aaa/
-https://v.douyin.com/bbb/
+9.71 复制打开抖音 https://v.douyin.com/bbb/ 直接观看视频！
 https://v.douyin.com/ccc/
 ```
 
@@ -66,6 +71,13 @@ python3 download_douyin.py https://v.douyin.com/xxx/ --no-proxy
 ```
 
 代理优先级：`--no-proxy` > `--proxy` > 环境变量 `PROXY_SERVER`
+
+## 特性
+
+- 支持直接粘贴抖音分享文案，自动提取链接
+- 同名文件自动加序号（`视频.mp4` → `视频_1.mp4`），不会覆盖已有文件
+- 请求失败自动重试 3 次
+- 下载超时 10 分钟，超时自动重试
 
 ## 原理
 
