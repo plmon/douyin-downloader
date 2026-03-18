@@ -60,13 +60,18 @@ DEFAULT_INTERVAL = 8  # 批量下载间隔秒数
 _proxy = None
 
 
-def curl_get(url):
-    """用 curl 发请求，返回响应内容"""
+def curl_get(url, retries=3):
+    """用 curl 发请求，返回响应内容，失败自动重试"""
     cmd = ["curl", "-s", "-L", "-H", f"User-Agent: {UA}"]
     if _proxy:
         cmd.extend(["-x", _proxy])
     cmd.append(url)
-    result = subprocess.run(cmd, capture_output=True, timeout=30)
+    for i in range(retries):
+        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=30)
+        if result.returncode == 0 and len(result.stdout) > 0:
+            return result.stdout.decode("utf-8", errors="replace")
+        if i < retries - 1:
+            time.sleep(2)
     return result.stdout.decode("utf-8", errors="replace")
 
 
@@ -120,7 +125,15 @@ def download_file(download_path, save_path):
         cmd.extend(["-x", _proxy])
     cmd.append(url)
 
-    subprocess.run(cmd, timeout=300)
+    for i in range(3):
+        try:
+            subprocess.run(cmd, timeout=600)
+        except subprocess.TimeoutExpired:
+            print("⚠️  下载超时，重试中..." if i < 2 else "⚠️  下载超时")
+        if save_path.exists() and save_path.stat().st_size > 0:
+            break
+        if i < 2:
+            time.sleep(2)
 
 
 def make_save_path(filename, output_dir, output_name=None):
