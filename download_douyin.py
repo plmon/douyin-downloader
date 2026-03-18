@@ -66,8 +66,8 @@ def curl_get(url):
     if _proxy:
         cmd.extend(["-x", _proxy])
     cmd.append(url)
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-    return result.stdout
+    result = subprocess.run(cmd, capture_output=True, timeout=30)
+    return result.stdout.decode("utf-8", errors="replace")
 
 
 def get_token():
@@ -124,16 +124,32 @@ def download_file(download_path, save_path):
 
 
 def make_save_path(filename, output_dir, output_name=None):
-    """生成保存路径"""
+    """生成保存路径，文件名重复时自动加序号"""
     save_name = output_name or re.sub(r'\[DLPanda\.com\]', '', filename).strip()
     if not save_name.endswith(".mp4"):
         save_name += ".mp4"
     output_dir.mkdir(parents=True, exist_ok=True)
-    return output_dir / save_name
+    save_path = output_dir / save_name
+    if save_path.exists():
+        stem = save_path.stem
+        n = 1
+        while save_path.exists():
+            save_path = output_dir / f"{stem}_{n}.mp4"
+            n += 1
+    return save_path
+
+
+def extract_url(text):
+    """从文本中提取抖音链接（处理分享文案夹杂的情况）"""
+    m = re.search(r'https?://[^\s]+douyin\.com/[^\s]+', text)
+    if m:
+        return m.group(0)
+    return text
 
 
 def download_single(douyin_url, output_dir, output_name=None):
     """下载单个视频，返回保存路径或 None"""
+    douyin_url = extract_url(douyin_url)
     print(f"🔍 解析: {douyin_url}")
 
     try:
